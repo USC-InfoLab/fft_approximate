@@ -23,8 +23,8 @@
 
 PG_MODULE_MAGIC;
 
-PG_FUNCTION_INFO_V1(fft_accum);
-PG_FUNCTION_INFO_V1(complex_fft);
+PG_FUNCTION_INFO_V1(complex_avg);
+PG_FUNCTION_INFO_V1(complex_avg_accum);
   
 // source: https://github.com/postgres/postgres/blob/master/src/backend/utils/adt/float.c
 static float8 *check_float8_array(ArrayType *transarray, const char *caller, int n) {
@@ -86,7 +86,7 @@ static float8 avg_integral_imag(float8 N, float8 L, Complex* val, int32 t1, int3
   return res;
 }
 
-Datum fft_accum(PG_FUNCTION_ARGS) {
+Datum complex_avg_accum(PG_FUNCTION_ARGS) {
   ArrayType* transarray = PG_GETARG_ARRAYTYPE_P(0);
   Complex* new_val = (Complex*) PG_GETARG_POINTER(1);
   int32 t1 = PG_GETARG_INT32(2);
@@ -130,7 +130,7 @@ Datum fft_accum(PG_FUNCTION_ARGS) {
   }
 }
 
-Datum complex_fft(PG_FUNCTION_ARGS) {
+Datum complex_avg(PG_FUNCTION_ARGS) {
   ArrayType *transarray = PG_GETARG_ARRAYTYPE_P(0);
   float8 *transvalues;
   float8 Sx, Sy, period;

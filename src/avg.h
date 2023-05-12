@@ -21,5 +21,5 @@
 
 static float8 avg_integral_real(float8 N, float8 L, Complex* val, int32 t1, int32 t2);
 static float8 avg_integral_imag(float8 N, float8 L, Complex* val, int32 t1, int32 t2);
-Datum fft_accum(PG_FUNCTION_ARGS);
-Datum complex_fft(PG_FUNCTION_ARGS);
+Datum complex_avg_accum(PG_FUNCTION_ARGS);
+Datum complex_avg(PG_FUNCTION_ARGS);
