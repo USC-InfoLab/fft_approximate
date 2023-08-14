@@ -2,9 +2,9 @@
 
 ### About
 
-fft_approximate is an open-source PostgreSQL extension that enables users to quickly answer aggregate range queries on time series data, using an approximate approach. Our approach leverages the power of Fast Fourier Transform (FFT) to store a condensed representation of each time series. By selectively storing only the top-k coefficients, we're able to compute aggregate range queries quickly and efficiently, with a small sacrifice on accuracy.
+fft_approximate is an open-source PostgreSQL extension that enables users to quickly answer aggregate range queries on time series data, using an approximate approach. Our approach leverages the power of the Fast Fourier Transform (FFT) to store a condensed representation of each time series. By selectively storing only the top-k coefficients, we're able to compute aggregate range queries quickly and efficiently, with a small sacrifice of accuracy.
 
-Users are encouranged to use this extension when working with large volumes of time series data but require rapid query processing times. With fft_approximate, you can achieve lightning-fast query performance while maintaining high accuracy, giving you a powerful tool for analyzing and visualizing time series data.
+Users are encouraged to use this extension when working with large volumes of time series data but require rapid query processing times.
 
 ### Usage
 
