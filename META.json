@@ -1,0 +1,39 @@
+{
+   "name": "fft_approximate",
+   "abstract": "Approximate FFT-based aggregate range queries on time series",
+   "description": "A PostgreSQL extension that stores a condensed FFT representation of time series (top-k coefficients) and answers aggregate range queries approximately.",
+   "version": "1.0.0",
+   "maintainer": ["NIH-W4H / USC InfoLab"],
+   "license": "mit",
+   "release_status": "unstable",
+   "provides": {
+      "fft_approximate": {
+         "abstract": "Approximate FFT-based aggregate range queries on time series",
+         "file": "sql/fft_approximate--1.0.sql",
+         "docfile": "README.md",
+         "version": "1.0.0"
+      }
+   },
+   "prereqs": {
+      "runtime": {
+         "requires": {
+            "PostgreSQL": "12.0.0"
+         }
+      }
+   },
+   "resources": {
+      "bugtracker": {
+         "web": "https://github.com/USC-InfoLab/fft_approximate/issues"
+      },
+      "repository": {
+         "url": "git://github.com/USC-InfoLab/fft_approximate.git",
+         "web": "https://github.com/USC-InfoLab/fft_approximate",
+         "type": "git"
+      }
+   },
+   "meta-spec": {
+      "version": "1.0.0",
+      "url": "https://pgxn.org/meta/spec.txt"
+   },
+   "tags": ["fft", "time series", "aggregate", "approximate"]
+}

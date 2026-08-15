@@ -1,0 +1,56 @@
+# nmake /F Makefile.win
+# Requires: x64 Native Tools Command Prompt and PGROOT
+#   set "PGROOT=C:\Program Files\PostgreSQL\17"
+
+EXTENSION = fft_approximate
+EXTVERSION = 1.0
+
+OBJS = src\complex.obj src\avg.obj
+
+REGRESS = type avg
+REGRESS_OPTS = --inputdir=test --load-extension=$(EXTENSION)
+
+!ifndef PGROOT
+!error PGROOT is not set (example: set "PGROOT=C:\Program Files\PostgreSQL\17")
+!endif
+
+BINDIR = $(PGROOT)\bin
+INCLUDEDIR = $(PGROOT)\include
+INCLUDEDIR_SERVER = $(PGROOT)\include\server
+LIBDIR = $(PGROOT)\lib
+PKGLIBDIR = $(PGROOT)\lib
+SHAREDIR = $(PGROOT)\share
+
+PG_REGRESS = $(LIBDIR)\pgxs\src\test\regress\pg_regress
+
+CFLAGS = /nologo /I"$(INCLUDEDIR_SERVER)\port\win32_msvc" /I"$(INCLUDEDIR_SERVER)\port\win32" /I"$(INCLUDEDIR_SERVER)" /I"$(INCLUDEDIR)" /I"src"
+CFLAGS = $(CFLAGS) $(PG_CFLAGS)
+
+SHLIB = $(EXTENSION).dll
+LIBS = "$(LIBDIR)\postgres.lib"
+
+all: $(SHLIB)
+
+.c.obj:
+	$(CC) $(CFLAGS) /c $< /Fo$@
+
+$(SHLIB): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LIBS) /link /DLL /OUT:$(SHLIB)
+
+install: all
+	copy $(SHLIB) "$(PKGLIBDIR)"
+	copy $(EXTENSION).control "$(SHAREDIR)\extension"
+	copy sql\$(EXTENSION)--*.sql "$(SHAREDIR)\extension"
+
+installcheck:
+	"$(PG_REGRESS)" --bindir="$(BINDIR)" $(REGRESS_OPTS) $(REGRESS)
+
+uninstall:
+	del /f "$(PKGLIBDIR)\$(SHLIB)"
+	del /f "$(SHAREDIR)\extension\$(EXTENSION).control"
+	del /f "$(SHAREDIR)\extension\$(EXTENSION)--*.sql"
+
+clean:
+	del /f $(SHLIB) $(EXTENSION).lib $(EXTENSION).exp
+	del /f $(OBJS)
+	del /f /s /q results regression.diffs regression.out tmp_check tmp_check_iso log output_iso

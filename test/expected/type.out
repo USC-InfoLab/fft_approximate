@@ -1,0 +1,42 @@
+SELECT '(1+2j)'::complex AS c;
+   c    
+--------
+ (1+2j)
+(1 row)
+
+SELECT '(1-2j)'::complex AS c;
+   c    
+--------
+ (1-2j)
+(1 row)
+
+SELECT '(-1+2j)'::complex AS c;
+    c    
+---------
+ (-1+2j)
+(1 row)
+
+SELECT '(-1-2j)'::complex AS c;
+    c    
+---------
+ (-1-2j)
+(1 row)
+
+SELECT re('(1+2j)'::complex) AS re, im('(1+2j)'::complex) AS im;
+ re | im 
+----+----
+  1 |  2
+(1 row)
+
+SELECT '(1+2j)'::complex + '(3-4j)'::complex AS sum;
+  sum   
+--------
+ (4-2j)
+(1 row)
+
+SELECT complex_add('(1+2j)'::complex, '(3-4j)'::complex) AS sum;
+  sum   
+--------
+ (4-2j)
+(1 row)
+

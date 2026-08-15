@@ -1,0 +1,4 @@
+comment = 'Approximate FFT-based aggregate range queries on time series'
+default_version = '1.0'
+module_pathname = '$libdir/fft_approximate'
+relocatable = true
