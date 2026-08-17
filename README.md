@@ -114,6 +114,8 @@ make PGHOST=127.0.0.1 PGPORT=5432 \
      installcheck
 ```
 
+`installcheck` runs `type`, `avg` (synthetic coefficients), and `cohort_hr` (constant heart-rate style DC windows).
+
 Windows: `nmake /F Makefile.win installcheck` with `PGROOT` and the same libpq variables.
 
 ## Usage

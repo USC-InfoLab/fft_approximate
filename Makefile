@@ -6,7 +6,7 @@ OBJS = src/complex.o src/avg.o
 DATA = sql/$(EXTENSION)--$(EXTVERSION).sql
 PGFILEDESC = "fft_approximate - approximate FFT range aggregates"
 
-REGRESS = type avg
+REGRESS = type avg cohort_hr
 REGRESS_OPTS = --inputdir=test --load-extension=$(EXTENSION)
 
 SHLIB_LINK += -lm
