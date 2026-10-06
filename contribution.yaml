@@ -1,0 +1,33 @@
+# Test contract for this module (guide/contribute-a-module.md in w4h-docs).
+# This is a PostgreSQL extension, not an ingest or analysis job: there is no
+# run.sh and no in-app Run button. A database admin installs it once with
+# install.sh; notebooks or SQL then call approximate_avg().
+
+slug: fft-approximate
+kind: postgres_extension
+language: sql
+publisher: usc-infolab
+
+install:
+  command: ./install.sh
+  requires: superuser   # C extension; Postgres refuses CREATE EXTENSION otherwise
+  env: [PG_CONFIG, PGUSER, PGDATABASE]
+
+tests:
+  automated:
+    # pg_regress in a throwaway contrib_regression database. Needs a local
+    # Postgres with the extension installed, but no W4H API and no network.
+    command: make PG_CONFIG=$PG_CONFIG installcheck
+    sample:
+      kind: fixtures
+      path: test/sql
+
+  live:
+    # Accuracy and timing against real heart rate. Writes only to the
+    # fft_bench schema of PGDATABASE.
+    command: python bench/real_heart_rate.py
+    sample:
+      kind: sibling
+      repo: w4h-sample-fitbit-csv
+      files:
+        - data/fitbit_heart_rate.csv
