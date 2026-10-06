@@ -104,6 +104,17 @@ Or:
 psql "postgresql://myuser:secret@127.0.0.1:5432/mydb" -c 'CREATE EXTENSION fft_approximate;'
 ```
 
+### Admin-only install (W4H)
+
+`install.sh` does steps 1 and 2 for one database, and stops first if the role is not a superuser:
+
+```sh
+PG_CONFIG=$PG_CONFIG PGUSER=admin PGDATABASE=w4h ./install.sh          # install
+PG_CONFIG=$PG_CONFIG PGUSER=admin PGDATABASE=w4h ./install.sh --check  # only check access
+```
+
+The C code runs inside the Postgres server, so a bug can affect every user of that server. Postgres itself already refuses `CREATE EXTENSION fft_approximate` for non-superusers; the script just says so before building anything.
+
 ## Test
 
 After step 1, with the same connection variables:
@@ -114,19 +125,53 @@ make PGHOST=127.0.0.1 PGPORT=5432 \
      installcheck
 ```
 
-`installcheck` runs `type`, `avg` (synthetic coefficients), and `cohort_hr` (constant heart-rate style DC windows).
+| Test | Checks |
+|---|---|
+| `type` | `complex` input/output, `re()`, `im()`, `+` |
+| `avg` | Empty input, DC-only coefficient, row order |
+| `cohort_hr` | Constant heart-rate style signals, full and sub-windows |
+| `waves` | Cosine, sine and two-wave signals with hand-computed averages, `GROUP BY` per subject, empty and reversed windows |
+| `known_issues` | Records the wrong-but-silent cases listed below, so a fix shows up as a test change |
 
 Windows: `nmake /F Makefile.win installcheck` with `PGROOT` and the same libpq variables.
+
+### Live check on real heart rate
+
+With [w4h-sample-fitbit-csv](https://github.com/USC-InfoLab/w4h-sample-fitbit-csv) checked out next to this repo:
+
+```sh
+pip install -r bench/requirements.txt
+PGDATABASE=mydb python bench/real_heart_rate.py   # writes only to schema fft_bench
+```
+
+Result on the sample (165,588 readings, 5 subjects, readings treated as a sequence):
+
+| Coefficients kept | 1 | 5 | 20 | 50 | 100 |
+|---|---|---|---|---|---|
+| Median error vs exact average | 4.78% | 0.80% | 0.15% | 0.05% | 0.03% |
+| Worst of 150 windows | 27.72% | 14.56% | 1.97% | 1.20% | 0.83% |
+
+The worst cases are short windows: the fewer readings in the window, the more coefficients it needs. Querying 100 stored coefficients took 0.2 ms vs 17 ms for an exact `AVG` over the raw rows.
 
 ## Usage
 
 ```sql
-SELECT approximate_avg(c, 0, 10, 10 ORDER BY k) FROM coeffs;
+SELECT re(approximate_avg(c, 0, 10, 10 ORDER BY k)) FROM coeffs;
 ```
 
 `complex` is the coefficient type (`(re+imj)`). `re()` / `im()` / `+` are provided. `t1`, `t2`, `signal_len` are integer indexes. Harmonic index is row order (0 = DC).
 
-`create_approximation(...)` is not implemented.
+The extension does not compute the FFT. Compute coefficients yourself (for example `numpy.fft.fft`) and store harmonics `0` to at most `100`, one row each. `create_approximation(...)` is not implemented.
+
+## Known issues
+
+Each of these returns a wrong answer without an error. All are recorded in `test/sql/known_issues.sql`.
+
+1. **Row position, not `k`, is the harmonic number.** Without `ORDER BY k`, or with a missing or NULL coefficient, every later wave is treated as the wrong frequency.
+2. **More than 101 coefficients is wrong.** `avg.c` hard-codes `TOPK = 100` and always treats the 102nd row as the Nyquist harmonic (`L/2`).
+3. **`im()` of the result is not 0 for a real signal.** Use `re()` only.
+4. **No input checks.** `signal_len = 0` returns `NaN`, a window past the end of the signal is accepted, and `'(1+2i)'` is read as `(1+2j)`.
+5. **Continuous, not discrete, average.** The aggregate integrates the reconstructed signal over `[t1, t2]`. With all coefficients it is still not exactly `AVG()` of the samples in that range.
 
 ## License
 
