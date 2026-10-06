@@ -1,0 +1,73 @@
+-- Current behavior that gives a wrong answer without an error.
+-- These outputs are recorded on purpose: a fix should change this file's
+-- expected output, so the change is visible in review. See README "Known issues".
+-- 1. The harmonic number is the row's position, not k. Without ORDER BY k the
+--    rows arrive in any order and the result changes. Correct value: 76.366198
+SELECT round(re(approximate_avg(c, 0, 2, 8))::numeric, 6) AS no_order_by
+FROM (VALUES (1, '(40+0j)'::complex), (0, '(560+0j)'::complex)) t(k, c);
+ no_order_by 
+-------------
+   94.126768
+(1 row)
+
+-- 2. A missing harmonic shifts every later row down by one. Here k=2 is
+--    treated as k=1. Correct value for x = 70 + 10*cos(2*pi*2t/8) on [0, 2]: 70
+SELECT round(re(approximate_avg(c, 0, 2, 8 ORDER BY k))::numeric, 6) AS gap_in_k
+FROM (VALUES (0, '(560+0j)'::complex), (2, '(40+0j)'::complex)) t(k, c);
+ gap_in_k  
+-----------
+ 76.366198
+(1 row)
+
+-- 3. A NULL coefficient is skipped (STRICT) and also shifts later rows.
+--    Correct value with k=1 missing and k=2 = 40 on [0, 2]: 70
+SELECT round(re(approximate_avg(c, 0, 2, 8 ORDER BY k))::numeric, 6) AS null_coefficient
+FROM (VALUES (0, '(560+0j)'::complex), (1, NULL::complex), (2, '(40+0j)'::complex)) t(k, c);
+ null_coefficient 
+------------------
+        76.366198
+(1 row)
+
+-- 4. avg.c hard-codes TOPK = 100: the 102nd row (k = 101) is always treated
+--    as the Nyquist harmonic L/2. Signal 2*cos(2*pi*101*t/1000), L = 1000,
+--    window [0, 1]: correct value 2*sin(w)/w with w = 2*pi*101/1000 = 1.868591
+SELECT round(re(approximate_avg(c, 0, 1, 1000 ORDER BY k))::numeric, 6) AS row_102_as_nyquist
+FROM (SELECT k, CASE WHEN k = 101 THEN '(1000+0j)' ELSE '(0+0j)' END::complex AS c
+      FROM generate_series(0, 101) k) t;
+ row_102_as_nyquist 
+--------------------
+           0.000000
+(1 row)
+
+-- 5. signal_len = 0 returns NaN instead of an error.
+SELECT re(approximate_avg(c, 0, 4, 0 ORDER BY k)) AS zero_length
+FROM (VALUES (0, '(560+0j)'::complex), (1, '(40+0j)'::complex)) t(k, c);
+ zero_length 
+-------------
+         NaN
+(1 row)
+
+-- 6. A window past the end of the signal is accepted (the waves repeat).
+SELECT round(re(approximate_avg(c, 6, 10, 8 ORDER BY k))::numeric, 6) AS past_the_end
+FROM (VALUES (0, '(560+0j)'::complex), (1, '(40+0j)'::complex)) t(k, c);
+ past_the_end 
+--------------
+    76.366198
+(1 row)
+
+-- 7. The imaginary part of the result is not 0 for a real signal, so only
+--    re() of the result is meaningful. Here it is 20/pi = 6.366198, not 0.
+SELECT round(im(approximate_avg(c, 0, 2, 8 ORDER BY k))::numeric, 6) AS imag_part
+FROM (VALUES (0, '(560+0j)'::complex), (1, '(40+0j)'::complex)) t(k, c);
+ imag_part 
+-----------
+  6.366198
+(1 row)
+
+-- 8. The input parser accepts 'i' as well as 'j'.
+SELECT '(1+2i)'::complex AS i_suffix;
+ i_suffix 
+----------
+ (1+2j)
+(1 row)
+
