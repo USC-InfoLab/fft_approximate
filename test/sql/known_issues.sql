@@ -19,7 +19,7 @@ FROM (VALUES (0, '(560+0j)'::complex), (1, NULL::complex), (2, '(40+0j)'::comple
 
 -- 4. avg.c hard-codes TOPK = 100: the 102nd row (k = 101) is always treated
 --    as the Nyquist harmonic L/2. Signal 2*cos(2*pi*101*t/1000), L = 1000,
---    window [0, 1]: correct value 2*sin(w)/w with w = 2*pi*101/1000 = 1.868591
+--    window [0, 1]: correct value 2*sin(w)/w with w = 2*pi*101/1000 = 1.868437
 SELECT round(re(approximate_avg(c, 0, 1, 1000 ORDER BY k))::numeric, 6) AS row_102_as_nyquist
 FROM (SELECT k, CASE WHEN k = 101 THEN '(1000+0j)' ELSE '(0+0j)' END::complex AS c
       FROM generate_series(0, 101) k) t;
