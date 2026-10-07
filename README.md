@@ -140,6 +140,8 @@ Windows: `nmake /F Makefile.win installcheck` with `PGROOT` and the same libpq v
 With [w4h-sample-fitbit-csv](https://github.com/USC-InfoLab/w4h-sample-fitbit-csv) checked out next to this repo:
 
 ```sh
+createdb mydb                                                        # any scratch database
+PG_CONFIG=$PG_CONFIG PGUSER=admin PGDATABASE=mydb ./install.sh       # extension into it (superuser)
 pip install -r bench/requirements.txt
 PGDATABASE=mydb python bench/real_heart_rate.py   # writes only to schema fft_bench
 ```
